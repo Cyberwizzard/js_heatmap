@@ -28,14 +28,14 @@
     	
     	createFloorPlan(15, 10);
     	createWall(7,0,7,5);
-    	createWall(7,5,12,5);
+    	createWall(7,5,9,5);
     	
-    	createSensor(4,3, 100);
-    	createSensor(8,4, 200);
+    	createSensor(100, 4,3);
+    	createSensor(200, 8,3, 2, 2);
     	
     	computeSensorMap();
     	
-    	setSensorValue(100, -7000);
+    	setSensorValue(100, 500);
     	setSensorValue(200, 3500);
     	
     	initializeMap(0);
@@ -47,15 +47,16 @@
     	function bundle() {
     		console.log("Update: " + ii);
 	    	updateMap();
-	    	drawFloorPlan("myCanvas");
+	    	//drawFloorPlan("myCanvas", MODE_STATIC);
+	    	drawFloorPlan("myCanvas", MODE_NORMAL);
     	}
     	
     	function scheduleBundle() {
-    		if(ii < 50) {
+    		if(ii < 1000) {
     			ii++;
     			bundle();
     			
-    			setTimeout(scheduleBundle, 1000);
+    			setTimeout(scheduleBundle, 100);
     		}
     	}
     	scheduleBundle();

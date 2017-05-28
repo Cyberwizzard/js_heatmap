@@ -21,6 +21,10 @@ var FP_WALL     = 1;	// Wall, impenetrable barrier - considered to have no influ
 var FP_DOOR     = 2;	// Door, can be open or closed - NOT YET IMPLEMENTED
 var FP_EXT_DOOR = 3;	// Exterior door or window, considered a temperature source when open or ignored when closed - NOT YET IMPLEMENTED
 
+var MODE_NORMAL = 0;
+var MODE_SECTIONS = 1;
+var MODE_STATIC   = 2;
+
 // Renderer settings
 var block_size   = 4;	    // in pixels, the size of each square making up the floorplan
 var legend       = 1;		// Enable or disable the legend completely
@@ -134,14 +138,26 @@ function interpolateColors(col1, col2, fraction) {
 	return rgbToHex(r,g,b);
 }
 
+
+colmap_palette = [
+	{r: 255, g: 255, b:   0},
+	{r: 255, g:   0, b:   0},
+	{r:   0, g: 255, b:   0},
+	{r: 255, g: 255, b:   0},
+	{r:   0, g:   0, b: 255},
+	{r: 255, g: 255, b:   0},
+	{r: 255, g: 255, b:   0},
+	{r: 255, g: 255, b:   0}
+];
+
 // Predefined constants used by mapToCol to generate the 'heat' map
-colmap_whitered	  = {r: 255, g: 107, b: 107};
+colmap_whitered	  = {r: 255, g: 200, b: 200};
 colmap_red	      = {r: 255, g:  17, b:  17};
 colmap_yellow	  = {r: 255, g: 233, b:  17};
 colmap_green	  = {r:  14, g: 212, b:  14};
 colmap_blue       = {r:  22, g:  41, b:  85};
 colmap_purple     = {r:  92, g:  28, b: 123};
-colmap_blackgreen = {r:  50, g:  83, b:  60};
+colmap_blackgreen = {r:  30, g:  50, b:  40};
 
 /*
  * Maps a value to a color, range: 3500 to 0 (divide by 100 to get the actual sensor value).
@@ -214,10 +230,10 @@ function getSensorValue(id) {
 	return -1;
 }
 
-function createSensor(x, y, id) {
+function createSensor(id, x, y, w = 1, h = 1) {
 	// Create sensor object
 	// TODO support bigger areas
-	s = {x: x, y: y, id: id, w: 1, h: 1};
+	s = {x: x, y: y, id: id, w: w, h: h};
 	sensors[sensors.length] = s;
 }
 
@@ -243,7 +259,14 @@ function computeSensorMap() {
 	
 	// Copy the sensors in there
 	sensors.forEach(function(obj) {
-		sensor_map[obj.y][obj.x] = obj.id;
+		for(yy = 0; yy < obj.h; yy++) {
+			for(xx = 0; xx < obj.w; xx++) {
+				y = yy + obj.y;
+				x = xx + obj.x;
+				sensor_map[y][x] = obj.id;
+				sensor_static_map[y][x] = 1; // mark as a static (unmutable) value
+			}
+		}
 	});
 	
 	// 'Grow' the sensor map by repeatedly iterating over the map, and assigning sensor IDs to each square until all 
@@ -341,7 +364,7 @@ function updateMap() {
 	map = newmap;
 }
 
-function drawFloorPlan(canvasName) {
+function drawFloorPlan(canvasName, mode = MODE_NORMAL) {
 	var canvas = document.getElementById(canvasName);
 	var context = canvas.getContext('2d');
 	
@@ -351,8 +374,8 @@ function drawFloorPlan(canvasName) {
 			switch(floorplan[y][x]) {
 				case 0: // Air
 					//col = mapToCol( map[y][x] );
-					col = getColorForField(x,y,0);
-					console.log("X: " + x + " Y: " + y + " col: " + col);
+					col = getColorForField(x,y,mode);
+					//console.log("X: " + x + " Y: " + y + " col: " + col);
 					break;
 				case 1: // Wall
 					col = "#000000";
@@ -373,10 +396,20 @@ function drawFloorPlan(canvasName) {
 
 function getColorForField(x, y, drawMode) {
 	switch(drawMode) {
-		case 0: // Standard: draw the sensor value map on top of the floorplan
+		case MODE_NORMAL: // Standard: draw the sensor value map on top of the floorplan
 			return mapToCol( map[y][x] );
+		case MODE_STATIC: // Show the static sensor allocation on the map
+			// TODO multi-color
+			if(sensor_static_map[y][x]) {
+				return '#ff4040';
+			}
+			return '#000000';
+		case MODE_SECTIONS: // Color per sensor-region
+			// TODO multi-color
+			return '#ffff00';
 	}	
 	
+	return '#ffffff';
 }
 
 function create2dMatrix(w, h, def) {
