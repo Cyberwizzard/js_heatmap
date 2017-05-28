@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+    
+    <script src="jquery-3.2.1.js"></script>
+    <script src="gradientmap.js"></script>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="578" height="500"></canvas>
+    <script>
+    	/*
+    	// Our appartment
+    	createFloorPlan(87, 90);
+    	createWall(1, 31, 43, 31);  // Kitchen back wall (3 mtr out, 4.2 mtr long)
+    	createWall(43, 1, 43, 7);   // Kitchen arch wall outer (60cm, arch is 90cm)
+    	createWall(43, 16, 43, 74); // Kitchen/washroom/livingroom wall TODO truncate for 2nd arch)
+    	
+    	setSensorInput(1, 1, 2000);
+    	setSensorInput(5, 3, 3200);
+    	setSensorInput(8, 1, 0);
+    	*/
+    	
+    	createFloorPlan(15, 10);
+    	createWall(7,0,7,5);
+    	createWall(7,5,12,5);
+    	
+    	createSensor(4,3, 100);
+    	createSensor(8,4, 200);
+    	
+    	computeSensorMap();
+    	
+    	setSensorValue(100, -7000);
+    	setSensorValue(200, 3500);
+    	
+    	initializeMap(0);
+    	
+    	drawLegend("myCanvas");
+    	
+    	var ii = 0;
+    	
+    	function bundle() {
+    		console.log("Update: " + ii);
+	    	updateMap();
+	    	drawFloorPlan("myCanvas");
+    	}
+    	
+    	function scheduleBundle() {
+    		if(ii < 50) {
+    			ii++;
+    			bundle();
+    			
+    			setTimeout(scheduleBundle, 1000);
+    		}
+    	}
+    	scheduleBundle();
+    </script>
+  </body>
+</html> 
